@@ -19,7 +19,6 @@ class TrickTracker:
         self.num_rounds = num_rounds
         self.scoreboard = np.zeros((len(players), num_rounds))
         self.curr_round = 0
-        
 
     def collect_bid(self, player, plyr_bid):
         self.bid_history[player].append(plyr_bid)
