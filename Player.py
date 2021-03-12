@@ -18,6 +18,8 @@ class Player:
     def play_card(self, curr_played, all_played, leading_suit=None):
         if leading_suit:
             poss_cards = [card for i, card in enumerate(self.hand) if i in self.hand.find_list([leading_suit])]
+            if len(poss_cards) == 0:
+                poss_cards = self.hand
         else:
             poss_cards = self.hand
         card_str = str(random.sample(list(poss_cards), 1)[0])
@@ -30,3 +32,6 @@ class Player:
         Record cards played during round
         """
         self.cards_observed.append(cards_played)
+
+    def __str__(self):
+        return self.name
