@@ -38,7 +38,12 @@ def new_game(sid, data):
 def deal(sid):
     if sid not in existing_games:
         sio.emit('deal', { 'error': 'No game exists' }, room=sid)
-    existing_games[sid].play()
+        return
+    game = existing_games[sid]
+    if game.curr_round >= game.num_rounds:
+        game.inform('deal', { 'cur': game.curr_round, 'num': game.num_rounds, 'error': 'Game already ended' })
+        return
+    game.play()
 
 @sio.event
 def disconnect(sid):

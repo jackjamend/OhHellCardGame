@@ -104,13 +104,14 @@ class OhHell:
             for player_idx in player_order[1:]:
                 curr_player = self.players[player_idx]
                 if not curr_player.is_ai:
-                    print(curr_player.hand)
                     card = self.ask('card_request', {
                         'hand': [str(c) for c in curr_player.hand],
                         'plays': {player.name: str(card) for (player, card) in curr_played.items()}
                     })
-                    print(card)
-                    card_index = curr_player.hand.find(card)[0]
+                    try:
+                        card_index = curr_player.hand.find(card)[0]
+                    except:
+                        print(curr_player.hand, card)
                     played_card = curr_player.hand[card_index]
                     del curr_player.hand[card_index]
                 else:
@@ -149,7 +150,6 @@ class OhHell:
         # Shift dealer one over and set up for next round
         self.players = self.players[1:] + [self.players[0]]
         self.curr_round += 1
-        self.inform('round_end')
 
 
     def display_dealer(self, dealer):
@@ -162,7 +162,7 @@ class OhHell:
         self.inform('hands', hands)
 
     def display_trump(self, trump_card):
-        self.inform('trump', { 'suit': trump_card.suit, 'value': trump_card.value })
+        self.inform('trump', str(trump_card))
 
     def display_bids(self, bids):
         self.inform('bids', {player.name: bid for (player, bid) in bids.items()})
@@ -171,12 +171,16 @@ class OhHell:
         self.inform('lead_suit', suit)
     
     def display_card_played(self, player, card):
-        self.inform('play', { player.name: { 'suit': card.suit, 'value': card.value }})
+        self.inform('play', { 'player': player.name, 'card': str(card) })
     
     def display_trick_winner(self, player):
-        self.inform('winner', player.name)
+        if any([player.is_ai for player in self.players]):
+            self.ask('trick_winner', player.name)
+        else:
+            self.inform('trick_winner', player.name)
 
     def display_round_info(self, tracker_output):
+        self.inform('round_end', {player.name: info for player, info in tracker_output.items()})
         for player, info in tracker_output.items():
             if info[0] == info[1]:
                 print('{} made their bid of {}'.format(player, info[0]))
