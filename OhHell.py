@@ -1,17 +1,18 @@
 import pydealer
 import numpy as np
-from .TrickTracker import TrickTracker
+from TrickTracker import TrickTracker
 class OhHell:
     total_cards = 52
-    def __init__(self, players, max_hand=None):
-        
+    def __init__(self, players, max_hand=None, ask=lambda *args: None, inform=lambda *args: None):
+        self.ask = ask
+        self.inform = inform
         self.num_players = len(players)
         self.players = players
         if max_hand:
             self.max_hand = max_hand
         else:
-            self.max_hand = OhHell.total_cards // num_players
-        self.num_rounds = max_hand * 2 - 1
+            self.max_hand = OhHell.total_cards // self.num_players
+        self.num_rounds = self.max_hand * 2 - 1
 
         self.tracker = TrickTracker(self.players, self.num_rounds)
 
@@ -63,7 +64,10 @@ class OhHell:
         # Collect bids
         bids = {}
         for player in self.players:
-            bid = player.make_bid(bids, player is dealer)
+            if not player.is_ai:
+                bid = self.ask('bid_request', {player.name: bid for (player, bid) in bids.items()})
+            else:
+                bid = player.make_bid(bids, player is dealer)
             bids[player] = bid
             self.tracker.collect_bid(player, bid)
         
@@ -77,12 +81,21 @@ class OhHell:
             curr_played = {}
             # First player goes and is "the best" so far
             leading_player = self.players[player_order[0]]
-            best_played_card = leading_player.play_card(curr_played, cards_out)
+            if not leading_player.is_ai:
+                card = self.ask('card_request', {
+                    'hand': [str(c) for c in leading_player.hand],
+                    'plays': {player.name: str(card) for (player, card) in curr_played.items()}
+                })
+                card_index = leading_player.hand.find(card)[0]
+                best_played_card = leading_player.hand[card_index]
+                del leading_player.hand[card_index]
+            else:
+                best_played_card = leading_player.play_card(curr_played, cards_out)
+                # Output played card
+                self.display_card_played(leading_player, best_played_card)
+                self.display_leading_suit(best_played_card.suit)
             best_player_idx = 0
             
-            # Output played card
-            self.display_leading_suit(best_played_card.suit)
-            self.display_card_played(leading_player, best_played_card)
             
             # Log card played and leading suit
             curr_played[leading_player] = best_played_card
@@ -90,10 +103,21 @@ class OhHell:
             custom_ranks["suits"][leading_suit] = 2
             for player_idx in player_order[1:]:
                 curr_player = self.players[player_idx]
-                played_card = curr_player.play_card(curr_played, cards_out, leading_suit)
+                if not curr_player.is_ai:
+                    print(curr_player.hand)
+                    card = self.ask('card_request', {
+                        'hand': [str(c) for c in curr_player.hand],
+                        'plays': {player.name: str(card) for (player, card) in curr_played.items()}
+                    })
+                    print(card)
+                    card_index = curr_player.hand.find(card)[0]
+                    played_card = curr_player.hand[card_index]
+                    del curr_player.hand[card_index]
+                else:
+                    played_card = curr_player.play_card(curr_played, cards_out, leading_suit)
+                    # Output played card
+                    self.display_card_played(curr_player, played_card)
 
-                # Output played card
-                self.display_card_played(curr_player, played_card)
                 if played_card.gt(best_played_card, custom_ranks):
                     best_played_card = played_card
                     best_player_idx = player_idx
@@ -125,35 +149,32 @@ class OhHell:
         # Shift dealer one over and set up for next round
         self.players = self.players[1:] + [self.players[0]]
         self.curr_round += 1
+        self.inform('round_end')
 
 
     def display_dealer(self, dealer):
         print("Dealer is {}".format(dealer))
 
     def display_hands(self, players):
+        hands = {}
         for player in players:
-            
-            if (len(player.hand) > 1):
-                # print("----")
-                print("{} : [{}]".format(player, ", ".join([str(c) for c in player.hand])))
-            else:
-                print("{} : {}".format(player, player.hand))
+            hands[player.name] = [str(c) for c in player.hand]
+        self.inform('hands', hands)
 
     def display_trump(self, trump_card):
-        print("Trump card is {}".format(trump_card.suit))
+        self.inform('trump', { 'suit': trump_card.suit, 'value': trump_card.value })
 
     def display_bids(self, bids):
-        for key, value in bids.items():
-            print("{} bid {}".format(key, value))
+        self.inform('bids', {player.name: bid for (player, bid) in bids.items()})
     
     def display_leading_suit(self, suit):
-        print("Leading suit is {}".format(suit))
+        self.inform('lead_suit', suit)
     
     def display_card_played(self, player, card):
-        print("{} played the {}".format(player, card))
+        self.inform('play', { player.name: { 'suit': card.suit, 'value': card.value }})
     
     def display_trick_winner(self, player):
-        print("{} won the trick\n".format(player))
+        self.inform('winner', player.name)
 
     def display_round_info(self, tracker_output):
         for player, info in tracker_output.items():

@@ -2,11 +2,12 @@ import pydealer
 import random
 
 class Player:
-    def __init__(self, name):
+    def __init__(self, name, is_ai=False):
         self.scale_fact = 3
         self.hand = pydealer.Stack()
         self.name = name
         self.cards_observed = []
+        self.is_ai = is_ai
     
     def make_bid(self, prev_bids, is_dealer):
         self.cards_observed = []
