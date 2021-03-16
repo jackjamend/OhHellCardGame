@@ -188,7 +188,6 @@ class OhHell:
                 print('{} missed their bid of {}, getting {} tricks'.format(player, info[1], info[0]))
     
     def display_scoreboard(self, players, scoreboard):
-        for player, score_row in zip(players, scoreboard):
-            print('{} : {}'.format(player, score_row))
+        self.inform('scores', {player.name: score_row[self.curr_round] for player, score_row in zip(players, scoreboard)})
 
     
