@@ -100,7 +100,8 @@ class OhHell:
             # Log card played and leading suit
             curr_played[leading_player] = best_played_card
             leading_suit = best_played_card.suit
-            custom_ranks["suits"][leading_suit] = 2
+            if leading_suit != trump_suit:
+                custom_ranks["suits"][leading_suit] = 2
             for player_idx in player_order[1:]:
                 curr_player = self.players[player_idx]
                 if not curr_player.is_ai:
@@ -119,7 +120,11 @@ class OhHell:
                     # Output played card
                     self.display_card_played(curr_player, played_card)
 
-                if played_card.gt(best_played_card, custom_ranks):
+                if (custom_ranks['suits'][played_card.suit] > custom_ranks['suits'][best_played_card.suit]) or \
+                    (
+                        custom_ranks['suits'][played_card.suit] == custom_ranks['suits'][best_played_card.suit] and
+                        custom_ranks['values'][played_card.value] > custom_ranks['values'][best_played_card.value]
+                    ):
                     best_played_card = played_card
                     best_player_idx = player_idx
                 
@@ -133,7 +138,8 @@ class OhHell:
             self.display_trick_winner(trick_winner)
 
             # Set up for next round
-            custom_ranks[leading_suit] = 1
+            if leading_suit != trump_suit:
+                custom_ranks[leading_suit] = 1
             cards_out += curr_played.values()
             player_order = list(range(best_player_idx, self.num_players)) + list(range(0, best_player_idx))
             for player in self.players:
