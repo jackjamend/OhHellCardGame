@@ -159,7 +159,7 @@ class OhHell:
 
 
     def display_dealer(self, dealer):
-        print("Dealer is {}".format(dealer))
+        self.inform('dealer', dealer.name)
 
     def display_hands(self, players):
         hands = {}

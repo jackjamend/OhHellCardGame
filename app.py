@@ -2,11 +2,12 @@ import eventlet
 import socketio
 from Player import Player
 from OhHell import OhHell
+import os
 
 sio = socketio.Server(cors_allowed_origins='*')
 app = socketio.WSGIApp(sio)
 
-GAME_TIMEOUT_LENGTH = 600
+GAME_TIMEOUT_LENGTH = int(os.environ.get('GAME_TIMEOUT_LENGTH') or 600)
 
 existing_games = {}
 
@@ -37,16 +38,21 @@ def new_game(sid, data):
 @sio.event
 def deal(sid):
     if sid not in existing_games:
-        sio.emit('deal', { 'error': 'No game exists' }, room=sid)
+        sio.emit('error', 'No game exists', room=sid)
         return
     game = existing_games[sid]
     if game.curr_round >= game.num_rounds:
-        game.inform('deal', { 'cur': game.curr_round, 'num': game.num_rounds, 'error': 'Game already ended' })
+        sio.emit('error', 'Game already ended', room=sid)
         return
-    game.play()
+    try:
+        game.play()
+    except socketio.exceptions.TimeoutError:
+        sio.emit('error', 'Game timed out', room=sid)
+        sio.disconnect(sid)
 
 @sio.event
 def disconnect(sid):
+    print(f'{sid} disconnected')
     global existing_games
     del existing_games[sid]
 
