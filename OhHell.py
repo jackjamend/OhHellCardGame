@@ -1,6 +1,6 @@
 import pydealer
 import numpy as np
-from TrickTracker import TrickTracker
+from .TrickTracker import TrickTracker
 class OhHell:
     total_cards = 52
     def __init__(self, players, max_hand=None, ask=lambda *args: None, inform=lambda *args: None):
@@ -120,11 +120,7 @@ class OhHell:
                     # Output played card
                     self.display_card_played(curr_player, played_card)
 
-                if (custom_ranks['suits'][played_card.suit] > custom_ranks['suits'][best_played_card.suit]) or \
-                    (
-                        custom_ranks['suits'][played_card.suit] == custom_ranks['suits'][best_played_card.suit] and
-                        custom_ranks['values'][played_card.value] > custom_ranks['values'][best_played_card.value]
-                    ):
+                if best_played_card.lt(played_card, custom_ranks):
                     best_played_card = played_card
                     best_player_idx = player_idx
                 
