@@ -41,7 +41,7 @@ def deal(sid):
         sio.emit('error', 'No game exists', room=sid)
         return
     game = existing_games[sid]
-    if game.curr_round >= game.num_rounds:
+    if game.state.curr_round >= game.state.num_rounds:
         sio.emit('error', 'Game already ended', room=sid)
         return
     try:

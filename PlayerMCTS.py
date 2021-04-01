@@ -1,15 +1,14 @@
 import numpy as np
 
+
 from Player import Player
 
 class PlayerMCTS(Player):
     pass
-    
-
 
 
 class Node:
-    def __init__(self, parent=None):
+    def __init__(self, curr_hand, out_cards, parent=None):
         self.children = []
         self.parent = parent
         self.w = 0
@@ -18,6 +17,9 @@ class Node:
             self.depth = 0
         else:
             self.depth = self.parent.depth + 1
+
+        self.hand = curr_hand
+        self.out = out_cards
 
     def UCT(self, c=None):
         """
@@ -37,4 +39,29 @@ class Node:
         exploration = c * np.sqrt(np.ln(self.parent.n) / self.n)
         return exploitation + exploration
 
-        
+class MonteCarloTreeSearch:
+    def __init__(self, hand, discarded):
+        self.root = Node(hand, discarded)
+
+    def search(self):
+        # Has children
+        if len(self.root.children) > 1:
+            pass
+
+        # Leaf node
+        else:
+            # Make a possible move
+            pass
+
+    def selection(self):
+        pass
+
+    def expansion(self):
+        pass
+
+    def simulation(self):
+        pass
+
+    def backpropagation(self):
+        pass
+
