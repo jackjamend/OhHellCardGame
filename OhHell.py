@@ -3,14 +3,15 @@ import numpy as np
 from TrickTracker import TrickTracker
 from GameState import GameState
 
+
 class OhHell:
     total_cards = 52
+
     def __init__(self, players, max_hand=None, ask=lambda *args: None, inform=lambda *args: None):
         self.ask = ask
         self.inform = inform
         self.state = GameState(players, max_hand)
         self.players = players
-
 
     def play(self):
         """
@@ -35,15 +36,14 @@ class OhHell:
 
         # Set trump card
         trump_card = deck.deal(1)[0]
-        trump_suit = trump_card.suit
+
         self.state.set_trump_suit(trump_card)
        
         # Output trump card
         self.display_trump(trump_card)
 
         # Collect bids
-
-        for player in self.players:
+        for player in self.state.get_bid_order():
             if not player.is_ai:
                 bid = self.ask('bid_request', {player.name: bid for (player, bid) in
                                                self.state.bids.items()})
@@ -55,50 +55,35 @@ class OhHell:
         # Output current bids
         self.display_bids(self.state.bids)
 
-        player_order = self.state.get_player_order()
-
         # Play tricks in round
         for i in range(curr_hand_size):
             # Single trick
-
-            # First player goes and is "the best" so far
-            leading_player = self.players[player_order[0]]
-            if not leading_player.is_ai:
-                card = self.ask('card_request', {
-                    'hand': [str(c) for c in leading_player.hand],
-                    'plays': {player.name: str(card) for (player, card) in
-                              self.state.trick_cards.items()}
-                })
-                best_played_card = leading_player.hand.get(card)[0]
-
-            else:
-                best_played_card = leading_player.play_card(self.state.discard)
-                # Output played card
-                self.display_card_played(leading_player, best_played_card)
-                self.display_leading_suit(best_played_card.suit)
-
-            leading_suit = self.state.setup_trick(best_played_card)
-            self.state.play_card(leading_player, player_order[0], best_played_card)
-
-            print('Player {} played {}'.format(leading_player, best_played_card))
-            # Play rest of round
-            for player_idx in player_order[1:]:
-                curr_player = self.players[player_idx]
-                if not curr_player.is_ai:
+            current_player = self.state.get_next_player()
+            p_count = 0
+            while current_player is not None:
+                if not current_player.is_ai:
                     card = self.ask('card_request', {
-                        'hand': [str(c) for c in curr_player.hand],
+                        'hand': [str(c) for c in current_player.hand],
                         'plays': {player.name: str(card) for (player, card) in
                                   self.state.trick_cards.items()}
                     })
-                    played_card = curr_player.hand.get(card)[0]
+                    card = current_player.hand.get(card)[0]
                 else:
-                    played_card = curr_player.play_card(self.state, leading_suit)
-                    # Output played card
-                    self.display_card_played(curr_player, played_card)
+                    card = current_player.play_card(self.state.discard)
 
-                self.state.play_card(curr_player, player_idx, played_card)
-                print('Player {} played {}'.format(curr_player, played_card))
-            trick_winner, player_order = self.state.finish_trick()
+                # Check if first player to display leading suit
+
+                self.state = self.state.play_card(current_player, card)
+                if p_count == 0:
+                    self.display_leading_suit(card.suit)
+
+                # Display card played
+                self.display_card_played(current_player, card)
+
+                current_player = self.state.get_next_player()
+                p_count += 1
+            p_count = 0
+            trick_winner = self.state.finish_trick()
             
             # Output winner
             self.display_trick_winner(trick_winner)
@@ -110,11 +95,9 @@ class OhHell:
         
         scoreboard = self.state.get_scoreboard(self.players)
         self.display_scoreboard(self.players, scoreboard, self.state.curr_round)
-        self.state.finish_round()
+
         # Shift dealer one over and set up for next round
-        self.players = self.players[1:] + [self.players[0]]
-        self.state.players = self.players
-        self.state.curr_round += 1
+        self.players = self.state.finish_round()
 
     def display_dealer(self, dealer):
         self.inform('dealer', dealer.name)
