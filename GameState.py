@@ -16,7 +16,7 @@ class GameState:
         if max_hand:
             self.max_hand = max_hand
         else:
-            self.max_hand = GameState.total_cards // self.num_players
+            self.max_hand = (GameState.total_cards - 1) // self.num_players
         self.num_rounds = self.max_hand * 2 - 1
 
         self.tracker = TrickTracker(self.players, self.num_rounds)
@@ -51,13 +51,14 @@ class GameState:
         self.best_played_card = None
         self.player_order = [i for i in range(self.num_players)]
         self.player_turn = 0
+        self.dealer_idx = len(self.players) - 1
 
     def begin_round(self):
         """
         Beginning logic of the match. Get hand size and dealer
         :return:
         """
-        self.dealer = self.players[-1]
+        self.dealer = self.players[self.dealer_idx]
         self.curr_hand_size = self.round_hand[self.curr_round]
         # self.player_order = [i for i in range(self.num_players)]
         offset = self.curr_round % self.num_players
@@ -147,6 +148,9 @@ class GameState:
         self.discard = []
         self.curr_round += 1
         self.tracker.reset()
+        self.dealer_idx += 1
+        if self.dealer_idx >= len(self.players):
+            self.dealer_idx = 0
         return self.players
 
     def terminal_state(self):
