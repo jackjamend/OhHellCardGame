@@ -1,5 +1,5 @@
 import pydealer
-from OhHellCardGame.TrickTracker import TrickTracker
+from TrickTracker import TrickTracker
 import copy
 
 

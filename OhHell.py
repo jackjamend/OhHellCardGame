@@ -23,7 +23,7 @@ class OhHell:
 
         # Output dealer
         self.display_dealer(dealer)
-        print('Dealer is', dealer)
+        # print('Dealer is', dealer)
         deck = pydealer.Deck()
         deck.shuffle()
 
@@ -121,18 +121,18 @@ class OhHell:
         self.inform('play', { 'player': player.name, 'card': str(card) })
     
     def display_trick_winner(self, player):
-        if any([player.is_ai for player in self.players]):
+        if any([not player.is_ai for player in self.players]):
             self.ask('trick_winner', player.name)
         else:
             self.inform('trick_winner', player.name)
 
     def display_round_info(self, tracker_output):
         self.inform('round_end', {player.name: info for player, info in tracker_output.items()})
-        for player, info in tracker_output.items():
-            if info[0] == info[1]:
-                print('{} made their bid of {}'.format(player, info[0]))
-            else:
-                print('{} missed their bid of {}, getting {} tricks'.format(player, info[1], info[0]))
+        # for player, info in tracker_output.items():
+        #     if info[0] == info[1]:
+        #         print('{} made their bid of {}'.format(player, info[0]))
+        #     else:
+        #         print('{} missed their bid of {}, getting {} tricks'.format(player, info[1], info[0]))
     
     def display_scoreboard(self, players, scoreboard, curr_round):
         self.inform('scores', {player.name: score_row[curr_round] for player, score_row in zip(players, scoreboard)})
