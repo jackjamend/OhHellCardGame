@@ -9,8 +9,8 @@ from OhHellCardGame.Player import Player
 
 
 class PlayerMCTS(Player):
-    def __init__(self, name, is_ai=False, search_time=3):
-        super().__init__(name, is_ai)
+    def __init__(self, name, search_time=3):
+        super().__init__(name, is_ai=True)
         self.search_time = search_time
 
     def play_card(self, state, leading_suit=None):
