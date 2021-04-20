@@ -5,7 +5,7 @@ import time
 
 import pydealer
 
-from OhHellCardGame.Player import Player
+from Player import Player
 
 
 class PlayerMCTS(Player):
