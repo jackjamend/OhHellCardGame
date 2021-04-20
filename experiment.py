@@ -8,7 +8,7 @@ scores = {
     'mcts_short': [],
     'mcts_long': []
 }
-for _ in range(1000):
+for _ in range(500):
     players = [
         AlphaBetaPlayer('alpha_beta_shallow', max_depth=1),
         AlphaBetaPlayer('alpha_beta_deep', max_depth=5),
@@ -23,4 +23,6 @@ for _ in range(1000):
     for player in scoreboard:
         scores[player].append(scoreboard[player])
     
-print('Average scores', {sum(scores[player]) / len(scores[player]) for player in scores})
+print('Average scores', {player: sum(scores[player]) / len(scores[player]) for player in scores})
+
+# Average scores {'alpha_beta_shallow': 16.68421052631579, 'alpha_beta_deep': 13.274853801169591, 'mcts_short': 46.73879142300195, 'mcts_long': 46.85964912280702}
