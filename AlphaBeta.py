@@ -12,11 +12,11 @@ class AlphaBetaPlayer(Player):
         super().__init__(name, is_ai=True)
         self.max_depth = max_depth
 
-    def make_bid(self, prev_bids, is_dealer):
+    def make_bid(self, state, is_dealer):
         return len(self.hand)
 
-    def play_card(self, curr_played, leading_suit=None, trump_suit=None):
-        card, prob = self.explore_node(self.hand, self.max_depth, leading_suit=leading_suit, trump_suit=trump_suit)
+    def play_card(self, state):
+        card, prob = self.explore_node(self.hand, self.max_depth, leading_suit=state.leading_suit, trump_suit=state.trump_suit)
         self.hand.get(str(card))
         return card
 
@@ -44,13 +44,11 @@ class AlphaBetaPlayer(Player):
 
 if __name__ == '__main__':
     # AlphaBeta experiment
-    def noop(*args):
-        pass
     from OhHell import OhHell
     scores = {'1': [], '2': [], '3': [], '4': []}
     for _ in range(500):
         players = [AlphaBetaPlayer(str(depth), depth) for depth in range(1,5)]
-        game = OhHell(players, 5, input, noop)
+        game = OhHell(players, 5)
         for _ in range(9):
             game.play()
         scoreboard = {player.name: score_row[-1] for player, score_row in zip(players, game.state.get_scoreboard(players))}

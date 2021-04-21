@@ -248,3 +248,19 @@ class MonteCarloTreeSearch:
             if won and p.my_turn:
                 p.w += 1
             p = p.parent
+
+if __name__ == '__main__':
+    # MCTS experiment
+    from OhHell import OhHell
+    scores = {'1': [], '2': [], '3': [], '4': []}
+    for _ in range(500):
+        players = [PlayerMCTS(str(time), time) for depth in range(1,5)]
+        game = OhHell(players, 5)
+        for _ in range(9):
+            game.play()
+        scoreboard = {player.name: score_row[-1] for player, score_row in zip(players, game.state.get_scoreboard(players))}
+        for player in scoreboard:
+            scores[player].append(scoreboard[player])
+    print('Average scores', {player: sum(scores[player]) / len(scores[player]) for player in scores})
+
+# Average scores {'1': 16.836, '2': 13.016, '3': 13.048, '4': 13.36}
