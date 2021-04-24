@@ -21,7 +21,7 @@ def new_game(sid, data):
     if players is None or len(players) < 2:
         sio.emit('game_init', { 'error': 'Not enough players provided' })
         return
-    if all([player['is_ai'] for name in players]):
+    if all(['is_ai' in player and player['is_ai'] for player in players]):
         sio.emit('game_init', { 'error': 'No human players provided' })
         return
     if len(players) != len(set([player['name'] for player in players])):
@@ -29,16 +29,18 @@ def new_game(sid, data):
         return
 
     def init_player(player):
-        if player['is_ai']:
-            if player['ai_settings']['algorithm'] == 'MCTS':
-                return PlayerMCTS(player['name'], player['ai_settings']['search_time'])
-            elif player['ai_settings']['algorithm'] == 'AlphaBeta':
-                return AlphaBetaPlayer(player['name'], player['ai_settings']['max_depth'])
+        if 'is_ai' in player and player['is_ai']:
+            if 'algorithm' not in player:
+                return Player(player['name'], is_ai=True) 
+            elif player['algorithm'] == 'MCTS':
+                return PlayerMCTS(player['name'], player['search_time'])
+            elif player['algorithm'] == 'AlphaBeta':
+                return AlphaBetaPlayer(player['name'], player['max_depth'])
             else:
                 return Player(player['name'], is_ai=True)
         return Player(player['name'])
-
     players = [init_player(player) for player in players]
+
     max_hand = data.get('max_hand')
     def ask(event, data=None):
         return sio.call(event, data, sid=sid, timeout=GAME_TIMEOUT_LENGTH)
@@ -66,8 +68,11 @@ def deal(sid):
 @sio.event
 def disconnect(sid):
     print(f'{sid} disconnected')
-    global existing_games
-    del existing_games[sid]
+    try:
+        global existing_games
+        del existing_games[sid]
+    except KeyError:
+        print(f'No game found for {sid}')
 
 if __name__ == '__main__':
     eventlet.wsgi.server(eventlet.listen(('', 5000)), app)
