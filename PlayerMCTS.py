@@ -261,6 +261,23 @@ if __name__ == '__main__':
         scoreboard = {player.name: score_row[-1] for player, score_row in zip(players, game.state.get_scoreboard(players))}
         for player in scoreboard:
             scores[player].append(scoreboard[player])
-    print('Average scores', {player: sum(scores[player]) / len(scores[player]) for player in scores})
+    print('Experiment 1 Average Scores', {player: sum(scores[player]) / len(scores[player]) for player in scores})
 
-# Average scores {'1': 16.836, '2': 13.016, '3': 13.048, '4': 13.36}
+    scores = {'1': [], '0.2': [], 'random_1': [], 'random_2': []}
+    for _ in range(500):
+        players = [
+            PlayerMCTS('1', 1),
+            Player('random_1', is_ai=True),
+            PlayerMCTS('0.2', 0.2),
+            Player('random_2', is_ai=True),
+        ]
+        game = OhHell(players, 5)
+        for _ in range(9):
+            game.play()
+        scoreboard = {player.name: score_row[-1] for player, score_row in zip(players, game.state.get_scoreboard(players))}
+        for player in scoreboard:
+            scores[player].append(scoreboard[player])
+    print('Experiment 2 Average Scores', {player: sum(scores[player]) / len(scores[player]) for player in scores})
+
+# Experiment 1 Average Scores {'1': 16.836, '2': 13.016, '3': 13.048, '4': 13.36}
+# Experiment 2 Average Scores {'1': 46.556, '0.2': 45.934, 'random_1': 42.81, 'random_2': 41.38}
