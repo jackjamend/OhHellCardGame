@@ -1,7 +1,7 @@
 import pydealer
 import numpy as np
-from TrickTracker import TrickTracker
-from GameState import GameState
+from OhHellCardGame.TrickTracker import TrickTracker
+from OhHellCardGame.GameState import GameState
 
 
 class OhHell:
