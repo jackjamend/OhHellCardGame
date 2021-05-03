@@ -2,7 +2,7 @@ import eventlet
 import socketio
 from Player import Player
 from PlayerMCTS import PlayerMCTS
-from AlphaBeta import AlphaBetaPlayer
+from STS import STSPlayer
 from OhHell import OhHell
 import os
 
@@ -16,6 +16,11 @@ existing_games = {}
 # Start a new game
 @sio.event
 def new_game(sid, data):
+    '''
+    Sets up a new game for the client.
+    :param sid: sid of the client.
+    :param data: data for the game. Includes a list of players and a maximum hand size.
+    '''
     # Set up the game
     players = data.get('players')
     if players is None or len(players) < 2:
@@ -34,8 +39,8 @@ def new_game(sid, data):
                 return Player(player['name'], is_ai=True) 
             elif player['algorithm'] == 'MCTS':
                 return PlayerMCTS(player['name'], player['search_time'])
-            elif player['algorithm'] == 'AlphaBeta':
-                return AlphaBetaPlayer(player['name'], player['max_depth'])
+            elif player['algorithm'] == 'STS':
+                return STSPlayer(player['name'], player['max_depth'])
             else:
                 return Player(player['name'], is_ai=True)
         return Player(player['name'])
@@ -52,6 +57,10 @@ def new_game(sid, data):
 
 @sio.event
 def deal(sid):
+    '''
+    Deal the next round of an existing game.
+    :param sid: the id of the client whose game should be dealt.
+    '''
     if sid not in existing_games:
         sio.emit('error', 'No game exists', room=sid)
         return
@@ -67,6 +76,10 @@ def deal(sid):
 
 @sio.event
 def disconnect(sid):
+    '''
+    Cleans up any leftover information after a client disconnects
+    :param sid: The id of the disconnecting client.
+    '''
     print(f'{sid} disconnected')
     try:
         global existing_games

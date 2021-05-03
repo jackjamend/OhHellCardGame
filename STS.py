@@ -7,8 +7,17 @@ custom_ranks = {"suits": {"Spades": 1, "Hearts": 1, "Clubs": 1, "Diamonds": 1},
                 "values": {"Ace": 13, "King": 12, "Queen": 11, "Jack": 10, "10": 9,
                             "9": 8, "8": 7, "7": 6, "6": 5, "5": 4, "4": 3, "3": 2, "2": 1,}}
 
-class AlphaBetaPlayer(Player):
+class STSPlayer(Player):
+    """
+    Inherits from the OhHellCardGame.Player class. Changes the logic for selecting and playing a
+    card.
+    """
     def __init__(self, name, max_depth=float('inf')):
+        """
+        Constructs an instance of the STSPlayer.
+        :param name: The name of the agent.
+        :param max_depth: The maximum depth to traverse the game tree.
+        """
         super().__init__(name, is_ai=True)
         self.max_depth = max_depth
 
@@ -16,11 +25,24 @@ class AlphaBetaPlayer(Player):
         return len(self.hand)
 
     def play_card(self, state):
+        """
+        Uses the STS algorithm to pick best move to make.
+        :param state: The GameState representing the current state of the game
+        :return: card to be played
+        """
         card, prob = self.explore_node(self.hand, self.max_depth, leading_suit=state.leading_suit, trump_suit=state.trump_suit)
         self.hand.get(str(card))
         return card
 
     def explore_node(self, cards, max_depth, leading_suit=None, trump_suit=None):
+        """
+        Recursively explores the game tree to find expected points down each branch.
+        :param cards: The cards available to the agent
+        :param max_depth: The maximum depth to search (relative to current depth)
+        :param leading_suit: The leading suit for the trick
+        :param trump_suit: The trump suit for the round
+        :return: optimal card, and probability of winning the trick with that card
+        """
         results = {}
         for card in cards:
             lead = leading_suit if leading_suit is not None else card.suit
@@ -43,11 +65,11 @@ class AlphaBetaPlayer(Player):
         return card, prob
 
 if __name__ == '__main__':
-    # AlphaBeta experiment
+    # STS experiment
     from OhHell import OhHell
     scores = {'1': [], '2': [], '3': [], '4': []}
     for _ in range(500):
-        players = [AlphaBetaPlayer(str(depth), depth) for depth in range(1,5)]
+        players = [STSPlayer(str(depth), depth) for depth in range(1,5)]
         game = OhHell(players, 5)
         for _ in range(9):
             game.play()
@@ -57,16 +79,16 @@ if __name__ == '__main__':
     print('Experiment 1 Average Scores', {player: sum(scores[player]) / len(scores[player]) for player in scores})
 
     scores = {
-        'alpha_beta_shallow': [],
-        'alpha_beta_deep': [],
+        'sts_shallow': [],
+        'sts_deep': [],
         'random_1': [],
         'random_2': []
     }
     for _ in range(500):
         players = [
-            AlphaBetaPlayer('alpha_beta_shallow', max_depth=1),
+            STSPlayer('sts_shallow', max_depth=1),
             Player('random_1', is_ai=True),
-            AlphaBetaPlayer('alpha_beta_deep', max_depth=5),
+            STSPlayer('sts_deep', max_depth=5),
             Player('random_2', is_ai=True)
         ]
         game = OhHell(players, max_hand=5)
@@ -79,4 +101,4 @@ if __name__ == '__main__':
     print('Experiment 2 Average Scores', {player: sum(scores[player]) / len(scores[player]) for player in scores})
 
 # Experiment 1 Average Scores {'1': 16.836, '2': 13.016, '3': 13.048, '4': 13.36}
-# Experiment 2 Average Scores {'alpha_beta_shallow': 17.716, 'alpha_beta_deep': 14.42, 'random_1': 44.054, 'random_2': 44.09}
+# Experiment 2 Average Scores {'sts_shallow': 17.716, 'sts_deep': 14.42, 'random_1': 44.054, 'random_2': 44.09}
