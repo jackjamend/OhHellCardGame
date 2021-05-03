@@ -54,6 +54,29 @@ if __name__ == '__main__':
         scoreboard = {player.name: score_row[-1] for player, score_row in zip(players, game.state.get_scoreboard(players))}
         for player in scoreboard:
             scores[player].append(scoreboard[player])
-    print('Average scores', {player: sum(scores[player]) / len(scores[player]) for player in scores})
+    print('Experiment 1 Average Scores', {player: sum(scores[player]) / len(scores[player]) for player in scores})
 
-# Average scores {'1': 16.836, '2': 13.016, '3': 13.048, '4': 13.36}
+    scores = {
+        'alpha_beta_shallow': [],
+        'alpha_beta_deep': [],
+        'random_1': [],
+        'random_2': []
+    }
+    for _ in range(500):
+        players = [
+            AlphaBetaPlayer('alpha_beta_shallow', max_depth=1),
+            Player('random_1', is_ai=True),
+            AlphaBetaPlayer('alpha_beta_deep', max_depth=5),
+            Player('random_2', is_ai=True)
+        ]
+        game = OhHell(players, max_hand=5)
+        for _ in range(9):
+            game.play()
+        scoreboard = {player.name: score_row[-1] for player, score_row in zip(players, game.state.get_scoreboard(players))}
+        for player in scoreboard:
+            scores[player].append(scoreboard[player])
+    
+    print('Experiment 2 Average Scores', {player: sum(scores[player]) / len(scores[player]) for player in scores})
+
+# Experiment 1 Average Scores {'1': 16.836, '2': 13.016, '3': 13.048, '4': 13.36}
+# Experiment 2 Average Scores {'alpha_beta_shallow': 17.716, 'alpha_beta_deep': 14.42, 'random_1': 44.054, 'random_2': 44.09}

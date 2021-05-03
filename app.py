@@ -1,6 +1,8 @@
 import eventlet
 import socketio
 from Player import Player
+from PlayerMCTS import PlayerMCTS
+from AlphaBeta import AlphaBetaPlayer
 from OhHell import OhHell
 import os
 
@@ -11,21 +13,34 @@ GAME_TIMEOUT_LENGTH = int(os.environ.get('GAME_TIMEOUT_LENGTH') or 600)
 
 existing_games = {}
 
-# Start a new game on connection
+# Start a new game
 @sio.event
 def new_game(sid, data):
     # Set up the game
-    player_names = data.get('players')
-    if player_names is None or len(player_names) < 2:
+    players = data.get('players')
+    if players is None or len(players) < 2:
         sio.emit('game_init', { 'error': 'Not enough players provided' })
         return
-    if all([name[:3] == 'bot' for name in player_names]):
+    if all(['is_ai' in player and player['is_ai'] for player in players]):
         sio.emit('game_init', { 'error': 'No human players provided' })
         return
-    if len(player_names) != len(set(player_names)):
+    if len(players) != len(set([player['name'] for player in players])):
         sio.emit('game_init', { 'error': 'Players must have unique names' })
         return
-    players = [Player(name, is_ai=name[:3] == 'bot') for name in player_names]
+
+    def init_player(player):
+        if 'is_ai' in player and player['is_ai']:
+            if 'algorithm' not in player:
+                return Player(player['name'], is_ai=True) 
+            elif player['algorithm'] == 'MCTS':
+                return PlayerMCTS(player['name'], player['search_time'])
+            elif player['algorithm'] == 'AlphaBeta':
+                return AlphaBetaPlayer(player['name'], player['max_depth'])
+            else:
+                return Player(player['name'], is_ai=True)
+        return Player(player['name'])
+    players = [init_player(player) for player in players]
+
     max_hand = data.get('max_hand')
     def ask(event, data=None):
         return sio.call(event, data, sid=sid, timeout=GAME_TIMEOUT_LENGTH)
@@ -53,8 +68,11 @@ def deal(sid):
 @sio.event
 def disconnect(sid):
     print(f'{sid} disconnected')
-    global existing_games
-    del existing_games[sid]
+    try:
+        global existing_games
+        del existing_games[sid]
+    except KeyError:
+        print(f'No game found for {sid}')
 
 if __name__ == '__main__':
     eventlet.wsgi.server(eventlet.listen(('', 5000)), app)
