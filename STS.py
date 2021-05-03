@@ -9,7 +9,7 @@ custom_ranks = {"suits": {"Spades": 1, "Hearts": 1, "Clubs": 1, "Diamonds": 1},
 
 class STSPlayer(Player):
     """
-    Inherits from the OhHellCardGame.Player class. Changes the logic for selecting and playing a
+    Inherits from the Player class. Changes the logic for selecting and playing a
     card.
     """
     def __init__(self, name, max_depth=float('inf')):

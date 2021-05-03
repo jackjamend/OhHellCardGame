@@ -3,7 +3,7 @@ Code containg the game state logic for the card game, Oh, Hell.
 """
 import copy
 
-from OhHellCardGame.TrickTracker import TrickTracker
+from TrickTracker import TrickTracker
 
 
 class GameState:

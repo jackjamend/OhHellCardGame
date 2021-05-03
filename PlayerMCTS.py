@@ -10,12 +10,12 @@ import time
 import pydealer
 import numpy as np
 
-from OhHellCardGame.Player import Player
+from Player import Player
 
 
 class PlayerMCTS(Player):
     """
-    Inherits from the OhHellCardGame.Player class. Changes the logic for selecting and playing a
+    Inherits from the Player class. Changes the logic for selecting and playing a
     card.
     """
     def __init__(self, name, search_time=3):
@@ -333,7 +333,7 @@ class MonteCarloTreeSearch:
 if __name__ == '__main__':
     # MCTS experiment
     # Runs the experiments for seeing how well the MCTS algorithm fairs
-    from OhHellCardGame.OhHell import OhHell
+    from OhHell import OhHell
     scores = {'1': [], '2': [], '3': [], '4': []}
     for _ in range(500):
         players = [PlayerMCTS(str(time), time) for depth in range(1,5)]

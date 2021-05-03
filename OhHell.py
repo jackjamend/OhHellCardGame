@@ -6,7 +6,7 @@ information about the current state of the game. The play function plays a round
 """
 
 import pydealer
-from OhHellCardGame.GameState import GameState
+from GameState import GameState
 
 
 class OhHell:
