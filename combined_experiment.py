@@ -1,3 +1,6 @@
+"""
+Script to run experiments of the AlphaBeta program against the MCTS.
+"""
 from OhHell import OhHell
 from PlayerMCTS import PlayerMCTS
 from AlphaBeta import AlphaBetaPlayer

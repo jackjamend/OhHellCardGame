@@ -1,19 +1,40 @@
-import numpy as np
+"""
+Code for implementing the AI agent using Monte Carlo tree search (MCTS).
+
+The MCTS is used for deciding the best card to play given the current state.
+"""
 import copy
 import random
 import time
 
 import pydealer
+import numpy as np
 
 from OhHellCardGame.Player import Player
 
 
 class PlayerMCTS(Player):
+    """
+    Inherits from the OhHellCardGame.Player class. Changes the logic for selecting and playing a
+    card.
+    """
     def __init__(self, name, search_time=3):
+        """
+        Constructs an instance of the PlayerMCTS.
+        :param name: The name of the agent.
+        :param search_time: The amount of time the agent is allowed to search for a future state.
+        """
         super().__init__(name, is_ai=True)
         self.search_time = search_time
 
     def play_card(self, state, leading_suit=None):
+        """
+        Uses MCTS to pick best move to make.
+        :param state: The GameState representing the current state of the game
+        :param leading_suit: If a leading suit was used, give information for it. Not used for
+        this method, follows inheritance.
+        :return: card to be played
+        """
         mcts = MonteCarloTreeSearch(copy.copy(self.hand), state.copy_state(), self)
         mcts.search(max_search_time=self.search_time)
         card = mcts.next_move()
@@ -23,7 +44,21 @@ class PlayerMCTS(Player):
 
 
 class Node:
+    """
+    Node class to use to build a tree to perform the MCTS.
+    """
     def __init__(self, hand, state, my_turn, action=None, parent=None):
+        """
+        Builds node in the tree.
+
+        W is the variable to track number of wins node is involved in and N is to keep track of
+        the number of simulations the node is involved in.
+        :param hand: the player's hand at the given node
+        :param state: the state at the current node
+        :param my_turn: whether or not it is the player's turn
+        :param action: the action that transitioned from parent to this node.
+        :param parent: the parent to the current node
+        """
         self.children = []
         self.parent = parent
         self.w = 0
@@ -63,16 +98,29 @@ class Node:
         return exploitation + exploration
 
     def __str__(self):
+        """
+        Representation of the node to get information about the search.
+        :return: string representation of the node.
+        """
         s = 'W: {}, N: {}, UCT: {}\n'.format(self.w, self.n, self.UCT())
         s += 'Depth: {}, Action: {}, Hand: [{}]'.format(self.depth, self.action,
                                                         ', '.join([str(c) for c in self.hand]))
         return s
 
     def __repr__(self):
+        """
+        :return: string representation of the node.
+        """
         return self.__str__()
 
 
 def random_select(hand, state):
+    """
+    Logic for randomly selecting a card given the hand and state
+    :param hand: the cards the player current has
+    :param state: the current GameState
+    :return: the card to play and the altered hand.
+    """
     if state.leading_suit is not None:
         poss_cards = [card for i, card in enumerate(hand) if
                       i in hand.find_list([state.leading_suit])]
@@ -87,6 +135,12 @@ def random_select(hand, state):
 
 
 def available_cards(p_hand, cards_out):
+    """
+    Creates a deck of all cards that are still out.
+    :param p_hand: player's hand
+    :param cards_out: cards that have already been played
+    :return: deck that has cards that have not been played and are not in the player's hand
+    """
     new_deck = pydealer.Deck()
     for card in (p_hand + cards_out):
         new_deck.get(str(card))
@@ -94,7 +148,17 @@ def available_cards(p_hand, cards_out):
 
 
 class MonteCarloTreeSearch:
+    """
+    Implements the Monte Carlo Tree Search (MCTS)for the game Oh, Hell
+    """
     def __init__(self, hand, state, player):
+        """
+        Creates an instance of the MCTS to find best move to make.
+
+        :param hand: the hand of the player
+        :param state: the current game state
+        :param player: the player who is using this search
+        """
         self.root = Node(copy.copy(hand), state, my_turn=True)
         self.player = player
         self.all_nodes = set()
@@ -108,6 +172,10 @@ class MonteCarloTreeSearch:
                 self.all_nodes.add(child)
 
     def next_move(self):
+        """
+        Simply performs a search over the root's children to find the best move to make.
+        :return: the action of the best move to make.
+        """
         best_ratio = 0
         best_child = self.root.children[0]
         for child in self.root.children:
@@ -120,13 +188,21 @@ class MonteCarloTreeSearch:
         return best_child.action
 
     def update_all_nodes(self):
+        """
+        Removes all nodes that are not explorable further.
+        """
         iter_nodes = list(self.all_nodes)
         for node in iter_nodes:
             if len(node.hand) == len(node.children):
-                #                 print('Removed node:',node)
                 self.all_nodes.remove(node)
 
     def search(self, choose_func=None, max_search_time=1):
+        """
+        Performs the Monte Carlo Tree Search algorithm with a max amount of time allowed.
+        :param choose_func: function for logic to decide what card to play.
+        :param max_search_time: the maximum amount of town to run this algorithm.
+        :return: the root node as well as the number of searches performed.
+        """
         start_time = time.time()
         searches = 0
         while time.time() - start_time < max_search_time and len(self.all_nodes) > 0:
@@ -136,12 +212,14 @@ class MonteCarloTreeSearch:
             self.backpropogation(end_state, new_node)
             self.update_all_nodes()
             searches += 1
-        # Pick best action
         return self.root, searches
 
     def selection(self):
-        #         print('{}{}{}'.format('-'*20, 'selection', '-'*20))
-        #         print('Num all nodes:', len(self.all_nodes))
+        """
+        Selection logic. Find the best node to explore further. UCT is used as the heuristic
+        function to find the best node.
+        """
+
         leaf_nodes = list(self.all_nodes)
         if len(leaf_nodes) == 0:
             return None
@@ -157,7 +235,12 @@ class MonteCarloTreeSearch:
             return best_node
 
     def expansion(self, search_node, choose_func=None):
-        #         print('{}{}{}'.format('-'*20, 'expansion', '-'*20))
+        """
+        Expands the current node by selecting one move to make.
+        :param search_node: the node that was selected to be explored.
+        :param choose_func: function for choosing cards to play
+        :return: the new node created that is a child of the search node.
+        """
         p = search_node
         if choose_func is None:
             choose_func = random_select
@@ -167,27 +250,22 @@ class MonteCarloTreeSearch:
         current_player = current_state.get_next_player()
         my_turn = False
 
-
         # Check if current player is null, means need to start next trick
         if current_player is None:
-            #             print('Expansion - cp null')
             trick_winner = current_state.finish_trick()
             current_player = current_state.get_next_player()
 
-
         # From current state, expand
         if current_player is self.player:
-            #             print('Move for current player')
             card, hand = choose_func(hand, current_state)
             if current_state.on_leading_player():
                 leading_suit = current_state.setup_trick(card)
             current_state = current_state.play_card(self.player, card)
             my_turn = True
-        #                 p = Node(hand, current_state, my_turn=True, action=card, parent=p)
+
         # Trick finished, clean up
         # Simulate action of other players
         else:
-            #             print('Player {} turn'.format(current_player))
             cards_avail = available_cards(hand, current_state.discard)
             card, _ = choose_func(cards_avail, current_state)
             if current_state.on_leading_player():
@@ -201,7 +279,12 @@ class MonteCarloTreeSearch:
         return new_node
 
     def simulation(self, traverse_node, choose_func=None):
-        #         print('{}{}{}'.format('-'*20, 'simulation', '-'*20))
+        """
+        Runs the simulation of the game until a final state is found
+        :param traverse_node: node being traversed until a leaf is found.
+        :param choose_func: the function used for selecting a card to play
+        :return: the final state once the terminal state is found.
+        """
         if choose_func is None:
             choose_func = random_select
         current_state = traverse_node.state.copy_state()
@@ -210,37 +293,34 @@ class MonteCarloTreeSearch:
         for i in range(tricks_left):
             current_player = current_state.get_next_player()
             while current_player is not None:
-                #                 print(current_state.trick_progression())
+
                 if current_player is self.player:
-                    #                     print('Current player is self')
                     card, hand = choose_func(copy.copy(hand), current_state)
                     if current_state.on_leading_player():
                         leading_suit = current_state.setup_trick(card)
                     current_state = current_state.play_card(self.player, card)
                 else:
-                    #                     print("Player {}'s turn".format(current_player))
                     cards_avail = available_cards(hand, current_state.discard)
                     card, _ = choose_func(cards_avail, current_state)
                     if current_state.on_leading_player():
-
                         leading_suit = current_state.setup_trick(card)
                     current_state = current_state.play_card(current_player, card)
 
-
-                #                 print('Player {} played {}'.format(current_player, card))
                 current_player = current_state.get_next_player()
             trick_winner = current_state.finish_trick()
-        #             print('Trick winner is', trick_winner)
 
         tracker_data = current_state.calculate_scores()
 
-        #         print('t data::::', current_state.tracker.tricks_taken)
         return current_state
 
     def backpropogation(self, final_state, explore_node):
-        #         print('{}{}{}'.format('-'*20, 'backpropogation', '-'*20))
+        """
+        Updates the win and simulation variables in all nodes on the path from this leaf node
+        back to the root.
+        :param final_state: the state from the terminal node
+        :param explore_node: the node that the simulations began from.
+        """
         bid, taken = final_state.end_trick_info(self.player)
-        #         print('Bid: {} Taken: {}'.format(bid, taken))
         won = bid == taken
         p = explore_node
         while p is not None:
@@ -249,9 +329,11 @@ class MonteCarloTreeSearch:
                 p.w += 1
             p = p.parent
 
+
 if __name__ == '__main__':
     # MCTS experiment
-    from OhHell import OhHell
+    # Runs the experiments for seeing how well the MCTS algorithm fairs
+    from OhHellCardGame.OhHell import OhHell
     scores = {'1': [], '2': [], '3': [], '4': []}
     for _ in range(500):
         players = [PlayerMCTS(str(time), time) for depth in range(1,5)]
