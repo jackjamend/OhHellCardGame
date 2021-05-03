@@ -1,20 +1,20 @@
 """
-Script to run experiments of the AlphaBeta program against the MCTS.
+Script to run experiments of the STS program against the MCTS.
 """
 from OhHell import OhHell
 from PlayerMCTS import PlayerMCTS
-from AlphaBeta import AlphaBetaPlayer
+from STS import STSPlayer
 
 scores = {
-    'alpha_beta_shallow': [],
-    'alpha_beta_deep': [],
+    'sts_shallow': [],
+    'sts_deep': [],
     'mcts_short': [],
     'mcts_long': []
 }
 for _ in range(500):
     players = [
-        AlphaBetaPlayer('alpha_beta_shallow', max_depth=1),
-        AlphaBetaPlayer('alpha_beta_deep', max_depth=5),
+        STSPlayer('sts_shallow', max_depth=1),
+        STSPlayer('sts_deep', max_depth=5),
         PlayerMCTS('mcts_short', search_time=1),
         PlayerMCTS('mcts_long', search_time=3)
     ]
@@ -28,4 +28,4 @@ for _ in range(500):
     
 print('Average scores', {player: sum(scores[player]) / len(scores[player]) for player in scores})
 
-# Average scores {'alpha_beta_shallow': 16.68421052631579, 'alpha_beta_deep': 13.274853801169591, 'mcts_short': 46.73879142300195, 'mcts_long': 46.85964912280702}
+# Average scores {'sts_shallow': 16.68421052631579, 'sts_deep': 13.274853801169591, 'mcts_short': 46.73879142300195, 'mcts_long': 46.85964912280702}
