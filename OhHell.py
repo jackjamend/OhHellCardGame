@@ -21,8 +21,8 @@ class OhHell:
         :param players: List of players that are going to play the game
         :param max_hand: The largest hand size in the game. If None, the maximum hand size
         possible will be played
-        :param ask: connection to get user input
-        :param inform: connection to inform the user
+        :param ask: function to get input from a user
+        :param inform: function to provide output to a suer
         """
         self.ask = ask
         self.inform = inform
